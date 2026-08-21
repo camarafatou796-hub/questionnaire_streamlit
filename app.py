@@ -1,9 +1,6 @@
 import streamlit as st
 import pandas as pd
 import os
-from openpyxl import load_workbook
-from openpyxl.styles import Font, Alignment
-from openpyxl.utils import get_column_letter
 
 
 # =========================================================
@@ -23,17 +20,20 @@ st.set_page_config(
 
 def obtenir_prochain_code():
     """
-    Cherche le dernier code enregistré dans le fichier Excel
+    Cherche le dernier code enregistré dans le fichier CSV
     et génère automatiquement le code suivant.
     """
 
-    fichier = "donnees/enquete.xlsx"
+    fichier = "donnees/enquete.csv"
 
     if not os.path.exists(fichier):
         return "PV0001"
 
     try:
-        df = pd.read_excel(fichier)
+        df = pd.read_csv(
+            fichier,
+            encoding="utf-8-sig"
+        )
 
         if "Code_point_vente" not in df.columns or df.empty:
             return "PV0001"
@@ -50,7 +50,7 @@ def obtenir_prochain_code():
                 except ValueError:
                     pass
 
-        if len(numeros) == 0:
+        if not numeros:
             return "PV0001"
 
         prochain_numero = max(numeros) + 1
@@ -71,86 +71,33 @@ def initialiser_produits():
             "produit": "",
             "marque": "",
             "format": "",
-            "nombre_unites": "",
-            "prix_achat": "",
-            "prix_vente": "",
-            "quantite_achetee": "",
-            "quantite_vendue": ""
+            "nombre_unites": 0,
+            "prix_achat": 0,
+            "prix_vente": 0,
+            "quantite_achetee": 0,
+            "quantite_vendue": 0
         }
     ]
 
 
-def mettre_en_forme_excel(fichier):
-    """
-    Améliore automatiquement la présentation du fichier Excel.
-    """
-
-    try:
-        wb = load_workbook(fichier)
-        ws = wb.active
-
-        # Première ligne en gras
-        for cell in ws[1]:
-            cell.font = Font(bold=True)
-            cell.alignment = Alignment(
-                horizontal="center",
-                vertical="center"
-            )
-
-        # Largeur automatique des colonnes
-        for colonne in ws.columns:
-
-            longueur_max = 0
-            lettre_colonne = get_column_letter(colonne[0].column)
-
-            for cellule in colonne:
-
-                try:
-                    longueur = len(str(cellule.value))
-                    if longueur > longueur_max:
-                        longueur_max = longueur
-                except Exception:
-                    pass
-
-            largeur = min(longueur_max + 2, 35)
-
-            ws.column_dimensions[lettre_colonne].width = largeur
-
-        # Figer la première ligne
-        ws.freeze_panes = "A2"
-
-        # Activer le filtre
-        ws.auto_filter.ref = ws.dimensions
-
-        wb.save(fichier)
-
-    except Exception:
-        pass
-
-
 # =========================================================
-# INITIALISATION DU CODE POINT DE VENTE
+# INITIALISATION
 # =========================================================
 
 if "code_point_vente" not in st.session_state:
     st.session_state.code_point_vente = obtenir_prochain_code()
 
-code_point_vente = st.session_state.code_point_vente
-
-
-# =========================================================
-# INITIALISATION DES PRODUITS
-# =========================================================
-
 if "produits" not in st.session_state:
     st.session_state.produits = initialiser_produits()
+
+code_point_vente = st.session_state.code_point_vente
 
 
 # =========================================================
 # TITRE
 # =========================================================
 
-st.title("Enquête sur les produits de protection menstruelle")
+st.title("📋 Enquête sur les produits de protection menstruelle")
 
 st.write(
     "Importation et commercialisation des produits "
@@ -170,7 +117,6 @@ st.text_input(
     disabled=True
 )
 
-
 type_commerce = st.selectbox(
     "Quel est le type de votre point de vente ?",
     [
@@ -184,8 +130,6 @@ type_commerce = st.selectbox(
     ]
 )
 
-
-# Grande surface
 if type_commerce == "Grande surface":
 
     nom_grande_surface = st.selectbox(
@@ -202,11 +146,9 @@ if type_commerce == "Grande surface":
     )
 
 else:
-
     nom_grande_surface = ""
 
 
-# Ville
 ville = st.selectbox(
     "Dans quelle ville se situe votre point de vente ?",
     [
@@ -223,7 +165,6 @@ ville = st.selectbox(
 )
 
 
-# Quartier
 quartier = st.selectbox(
     "Dans quel quartier se situe votre point de vente ?",
     [
@@ -253,9 +194,7 @@ quartier = st.selectbox(
 # 2. PRODUITS COMMERCIALISÉS
 # =========================================================
 
-st.subheader(
-    "2. Produits de protection menstruelle commercialisés"
-)
+st.subheader("2. Produits de protection menstruelle commercialisés")
 
 st.write(
     "Quels produits sont actuellement commercialisés "
@@ -285,10 +224,6 @@ for i in range(len(st.session_state.produits)):
     st.markdown(f"### Produit {i + 1}")
 
     col1, col2 = st.columns(2)
-
-    # -----------------------------------------------------
-    # COLONNE 1
-    # -----------------------------------------------------
 
     with col1:
 
@@ -330,10 +265,6 @@ for i in range(len(st.session_state.produits)):
             key=f"nombre_unites_{i}"
         )
 
-    # -----------------------------------------------------
-    # COLONNE 2
-    # -----------------------------------------------------
-
     with col2:
 
         st.session_state.produits[i]["prix_achat"] = st.number_input(
@@ -368,7 +299,7 @@ for i in range(len(st.session_state.produits)):
 
 
 # =========================================================
-# AJOUTER UNE AUTRE MARQUE / PRODUIT
+# AJOUTER UN PRODUIT
 # =========================================================
 
 if st.button("➕ Ajouter une autre marque / produit"):
@@ -378,11 +309,11 @@ if st.button("➕ Ajouter une autre marque / produit"):
             "produit": "",
             "marque": "",
             "format": "",
-            "nombre_unites": "",
-            "prix_achat": "",
-            "prix_vente": "",
-            "quantite_achetee": "",
-            "quantite_vendue": ""
+            "nombre_unites": 0,
+            "prix_achat": 0,
+            "prix_vente": 0,
+            "quantite_achetee": 0,
+            "quantite_vendue": 0
         }
     )
 
@@ -394,7 +325,6 @@ if st.button("➕ Ajouter une autre marque / produit"):
 # =========================================================
 
 st.subheader("4. Approvisionnement")
-
 
 fournisseur = st.text_input(
     "Nom ou code du fournisseur"
@@ -471,7 +401,6 @@ cout_transport = st.number_input(
 
 st.subheader("5. Rupture de stock")
 
-
 rupture_stock = st.selectbox(
     "Avez-vous connu une rupture de stock au cours des 12 derniers mois ?",
     [
@@ -520,7 +449,6 @@ else:
 # =========================================================
 
 st.subheader("6. Demande et commercialisation")
-
 
 produit_plus_demande = st.multiselect(
     "Quels produits sont les plus demandés par vos clients ?",
@@ -571,7 +499,6 @@ evolution_demande = st.selectbox(
 
 st.subheader("7. Difficultés rencontrées")
 
-
 difficultes = st.multiselect(
     "Quelles difficultés rencontrez-vous dans la commercialisation ?",
     [
@@ -595,7 +522,6 @@ difficultes = st.multiselect(
 
 st.subheader("8. Enregistrement")
 
-
 if st.button("💾 Enregistrer la réponse"):
 
     donnees = []
@@ -608,7 +534,6 @@ if st.button("💾 Enregistrer la réponse"):
             and produit["marque"].strip() != ""
         ):
 
-            # Calcul de la marge
             marge = (
                 produit["prix_vente"]
                 - produit["prix_achat"]
@@ -640,13 +565,16 @@ if st.button("💾 Enregistrer la réponse"):
 
                 "Marge_FCFA": marge,
 
-                "Quantite_achetee_mois": produit["quantite_achetee"],
+                "Quantite_achetee_mois":
+                    produit["quantite_achetee"],
 
-                "Quantite_vendue_mois": produit["quantite_vendue"],
+                "Quantite_vendue_mois":
+                    produit["quantite_vendue"],
 
                 "Fournisseur": fournisseur,
 
-                "Mode_approvisionnement": mode_approvisionnement,
+                "Mode_approvisionnement":
+                    mode_approvisionnement,
 
                 "Origine": origine,
 
@@ -661,7 +589,8 @@ if st.button("💾 Enregistrer la réponse"):
                 "Cout_transport_FCFA":
                     cout_transport,
 
-                "Rupture_stock": rupture_stock,
+                "Rupture_stock":
+                    rupture_stock,
 
                 "Frequence_rupture":
                     frequence_rupture,
@@ -685,14 +614,15 @@ if st.button("💾 Enregistrer la réponse"):
             donnees.append(ligne)
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # VÉRIFICATION
-    # -----------------------------------------------------
+    # =====================================================
 
-    if len(donnees) == 0:
+    if not donnees:
 
         st.warning(
-            "Veuillez renseigner au moins un produit et une marque."
+            "⚠️ Veuillez renseigner au moins un produit "
+            "et une marque."
         )
 
     else:
@@ -700,8 +630,7 @@ if st.button("💾 Enregistrer la réponse"):
         nouveau_df = pd.DataFrame(donnees)
 
         dossier = "donnees"
-
-        fichier = "donnees/enquete.xlsx"
+        fichier = "donnees/enquete.csv"
 
         os.makedirs(
             dossier,
@@ -709,14 +638,15 @@ if st.button("💾 Enregistrer la réponse"):
         )
 
 
-        # -------------------------------------------------
-        # AJOUT AU FICHIER EXISTANT
-        # -------------------------------------------------
+        # =================================================
+        # AJOUT AU CSV EXISTANT
+        # =================================================
 
         if os.path.exists(fichier):
 
-            ancien_df = pd.read_excel(
-                fichier
+            ancien_df = pd.read_csv(
+                fichier,
+                encoding="utf-8-sig"
             )
 
             final_df = pd.concat(
@@ -732,30 +662,26 @@ if st.button("💾 Enregistrer la réponse"):
             final_df = nouveau_df
 
 
-        # -------------------------------------------------
-        # ENREGISTREMENT
-        # -------------------------------------------------
+        # =================================================
+        # ENREGISTREMENT CSV
+        # =================================================
 
-        final_df.to_excel(
+        final_df.to_csv(
             fichier,
-            index=False
+            index=False,
+            encoding="utf-8-sig"
         )
-
-
-        # Mise en forme du fichier Excel
-        mettre_en_forme_excel(fichier)
 
 
         st.success(
             f"✅ Réponse de {code_point_vente} "
-            "enregistrée avec succès."
+            "enregistrée avec succès dans le fichier CSV."
         )
-
 
         st.info(
             "Vous pouvez maintenant cliquer sur "
-            "« Nouveau questionnaire » pour passer au "
-            "point de vente suivant."
+            "« Nouveau questionnaire » pour passer "
+            "au point de vente suivant."
         )
 
 
@@ -767,14 +693,13 @@ st.divider()
 
 if st.button("🆕 Nouveau questionnaire"):
 
-    # Générer le prochain code à partir du fichier Excel
+    # Générer le prochain code à partir du fichier CSV
     nouveau_code = obtenir_prochain_code()
 
     st.session_state.code_point_vente = nouveau_code
 
     # Réinitialiser les produits
     st.session_state.produits = initialiser_produits()
-
 
     # Supprimer les anciennes valeurs des widgets
     cles_a_conserver = [
@@ -785,8 +710,6 @@ if st.button("🆕 Nouveau questionnaire"):
     for key in list(st.session_state.keys()):
 
         if key not in cles_a_conserver:
-
             del st.session_state[key]
-
 
     st.rerun()
