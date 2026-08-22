@@ -15,233 +15,89 @@ st.set_page_config(
 
 
 # =========================================================
-# STYLE DE L'APPLICATION
-# =========================================================
-
-st.markdown(
-    """
-    <style>
-
-    /* =====================================================
-       FOND NOIR
-       ===================================================== */
-
-    .stApp {
-        background-color: #0E1117;
-    }
-
-
-    /* =====================================================
-       TEXTE BLANC
-       ===================================================== */
-
-    .stApp p,
-    .stApp label,
-    .stApp h1,
-    .stApp h2,
-    .stApp h3 {
-        color: white !important;
-    }
-
-
-    /* =====================================================
-       CHOIX MULTIPLES SÉLECTIONNÉS
-       ===================================================== */
-
-    div[data-baseweb="tag"] {
-        background-color: #2E7D32 !important;
-        color: white !important;
-        border-color: #2E7D32 !important;
-    }
-
-    div[data-baseweb="tag"] span {
-        color: white !important;
-    }
-
-    div[data-baseweb="tag"] svg {
-        fill: white !important;
-    }
-
-
-    /* =====================================================
-       OPTIONS SÉLECTIONNÉES DANS LES MENUS
-       ===================================================== */
-
-    div[role="option"][aria-selected="true"] {
-        background-color: #2E7D32 !important;
-        color: white !important;
-    }
-
-    div[role="option"][aria-selected="true"] span {
-        color: white !important;
-    }
-
-
-    /* =====================================================
-       CASES À COCHER
-       ===================================================== */
-
-    div[data-testid="stCheckbox"] label {
-        color: white !important;
-    }
-
-
-    /* =====================================================
-       BOUTONS
-       ===================================================== */
-
-    .stButton > button {
-        background-color: #2E7D32 !important;
-        color: white !important;
-        border: 1px solid #2E7D32 !important;
-        border-radius: 8px;
-        font-weight: bold;
-    }
-
-    .stButton > button:hover {
-        background-color: #1B5E20 !important;
-        color: white !important;
-        border-color: #1B5E20 !important;
-    }
-
-
-    /* =====================================================
-       SÉPARATEURS
-       ===================================================== */
-
-    hr {
-        border-color: #2E7D32 !important;
-    }
-
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-
-# =========================================================
-# FONCTION : PROCHAIN CODE POINT DE VENTE
+# FONCTIONS
 # =========================================================
 
 def obtenir_prochain_code():
+    """
+    Cherche le dernier code enregistré dans le fichier CSV
+    et génère automatiquement le code suivant.
+    """
 
     fichier = "donnees/enquete.csv"
 
-    # Le fichier n'existe pas
     if not os.path.exists(fichier):
         return "PV0001"
 
-    # Le fichier existe mais il est vide
-    if os.path.getsize(fichier) == 0:
-        return "PV0001"
-
     try:
-
         df = pd.read_csv(
             fichier,
             encoding="utf-8-sig"
         )
 
-        # Fichier vide
-        if df.empty:
+        if "Code_point_vente" not in df.columns or df.empty:
             return "PV0001"
 
-        # Colonne absente
-        if "Code_point_vente" not in df.columns:
-            return "PV0001"
-
-        codes = (
-            df["Code_point_vente"]
-            .dropna()
-            .astype(str)
-        )
+        codes = df["Code_point_vente"].dropna().astype(str)
 
         numeros = []
 
         for code in codes:
-
             if code.startswith("PV"):
-
                 try:
-
-                    numero = int(
-                        code.replace("PV", "")
-                    )
-
+                    numero = int(code.replace("PV", ""))
                     numeros.append(numero)
-
                 except ValueError:
                     pass
 
-        if len(numeros) == 0:
+        if not numeros:
             return "PV0001"
 
         prochain_numero = max(numeros) + 1
 
         return f"PV{prochain_numero:04d}"
 
-    except pd.errors.EmptyDataError:
-
-        return "PV0001"
-
     except Exception:
-
         return "PV0001"
 
-
-# =========================================================
-# FONCTION : INITIALISER LES PRODUITS
-# =========================================================
 
 def initialiser_produits():
+    """
+    Crée une nouvelle ligne de produit.
+    """
 
     return [
         {
             "produit": "",
             "marque": "",
             "format": "",
-            "nombre_unites": "",
-            "prix_achat": "",
-            "prix_vente": "",
-            "quantite_achetee": "",
-            "quantite_vendue": ""
+            "nombre_unites": 0,
+            "prix_achat": 0,
+            "prix_vente": 0,
+            "quantite_achetee": 0,
+            "quantite_vendue": 0
         }
     ]
 
 
 # =========================================================
-# INITIALISATION DU CODE
+# INITIALISATION
 # =========================================================
 
 if "code_point_vente" not in st.session_state:
-
-    st.session_state.code_point_vente = (
-        obtenir_prochain_code()
-    )
-
-code_point_vente = (
-    st.session_state.code_point_vente
-)
-
-
-# =========================================================
-# INITIALISATION DES PRODUITS
-# =========================================================
+    st.session_state.code_point_vente = obtenir_prochain_code()
 
 if "produits" not in st.session_state:
+    st.session_state.produits = initialiser_produits()
 
-    st.session_state.produits = (
-        initialiser_produits()
-    )
+code_point_vente = st.session_state.code_point_vente
 
 
 # =========================================================
 # TITRE
 # =========================================================
 
-st.title(
-    "📋 Enquête sur les produits de protection menstruelle"
-)
+st.title("📋 Enquête sur les produits de protection menstruelle")
 
 st.write(
     "Importation et commercialisation des produits "
@@ -253,17 +109,13 @@ st.write(
 # 1. INFORMATIONS SUR LE POINT DE VENTE
 # =========================================================
 
-st.subheader(
-    "1. Informations sur le point de vente"
-)
-
+st.subheader("1. Informations sur le point de vente")
 
 st.text_input(
     "Code du point de vente",
     value=code_point_vente,
     disabled=True
 )
-
 
 type_commerce = st.selectbox(
     "Quel est le type de votre point de vente ?",
@@ -277,7 +129,6 @@ type_commerce = st.selectbox(
         "Autre"
     ]
 )
-
 
 if type_commerce == "Grande surface":
 
@@ -295,7 +146,6 @@ if type_commerce == "Grande surface":
     )
 
 else:
-
     nom_grande_surface = ""
 
 
@@ -344,162 +194,106 @@ quartier = st.selectbox(
 # 2. PRODUITS COMMERCIALISÉS
 # =========================================================
 
-st.subheader(
-    "2. Produits de protection menstruelle commercialisés"
-)
+st.subheader("2. Produits de protection menstruelle commercialisés")
 
 st.write(
     "Quels produits sont actuellement commercialisés "
     "dans votre point de vente ?"
 )
 
-
-serviettes = st.checkbox(
-    "Serviettes hygiéniques"
-)
-
-protege_slips = st.checkbox(
-    "Protège-slips"
-)
-
-tampons = st.checkbox(
-    "Tampons"
-)
-
-coupe_menstruelle = st.checkbox(
-    "Coupe menstruelle"
-)
-
-autre_produit = st.checkbox(
-    "Autre"
-)
+serviettes = st.checkbox("Serviettes hygiéniques")
+protege_slips = st.checkbox("Protège-slips")
+tampons = st.checkbox("Tampons")
+coupe_menstruelle = st.checkbox("Coupe menstruelle")
+autre_produit = st.checkbox("Autre")
 
 
 # =========================================================
 # 3. MARQUES, CONDITIONNEMENT ET PRIX
 # =========================================================
 
-st.subheader(
-    "3. Marques, conditionnement et prix"
-)
+st.subheader("3. Marques, conditionnement et prix")
 
 st.write(
     "Ajoutez chaque produit et chaque marque commercialisés."
 )
 
 
-for i in range(
-    len(st.session_state.produits)
-):
+for i in range(len(st.session_state.produits)):
 
-    st.markdown(
-        f"### Produit {i + 1}"
-    )
+    st.markdown(f"### Produit {i + 1}")
 
     col1, col2 = st.columns(2)
 
-
-    # -----------------------------------------------------
-    # COLONNE 1
-    # -----------------------------------------------------
-
     with col1:
 
-        st.session_state.produits[i]["produit"] = (
-            st.selectbox(
-                "Produit",
-                [
-                    "Sélectionner",
-                    "Serviettes hygiéniques",
-                    "Protège-slips",
-                    "Tampons",
-                    "Coupe menstruelle",
-                    "Autre"
-                ],
-                key=f"produit_{i}"
-            )
+        st.session_state.produits[i]["produit"] = st.selectbox(
+            "Produit",
+            [
+                "Sélectionner",
+                "Serviettes hygiéniques",
+                "Protège-slips",
+                "Tampons",
+                "Coupe menstruelle",
+                "Autre"
+            ],
+            key=f"produit_{i}"
         )
 
-
-        st.session_state.produits[i]["marque"] = (
-            st.text_input(
-                "Marque",
-                key=f"marque_{i}"
-            )
+        st.session_state.produits[i]["marque"] = st.text_input(
+            "Marque",
+            key=f"marque_{i}"
         )
 
-
-        st.session_state.produits[i]["format"] = (
-            st.selectbox(
-                "Type de conditionnement",
-                [
-                    "Sélectionner",
-                    "Paquet",
-                    "Boîte",
-                    "Carton",
-                    "Unité",
-                    "Autre"
-                ],
-                key=f"format_{i}"
-            )
+        st.session_state.produits[i]["format"] = st.selectbox(
+            "Type de conditionnement",
+            [
+                "Sélectionner",
+                "Paquet",
+                "Boîte",
+                "Carton",
+                "Unité",
+                "Autre"
+            ],
+            key=f"format_{i}"
         )
 
-
-        st.session_state.produits[i]["nombre_unites"] = (
-            st.number_input(
-                "Nombre d'unités dans le conditionnement",
-                min_value=0,
-                step=1,
-                key=f"nombre_unites_{i}"
-            )
+        st.session_state.produits[i]["nombre_unites"] = st.number_input(
+            "Nombre d'unités dans le conditionnement",
+            min_value=0,
+            step=1,
+            key=f"nombre_unites_{i}"
         )
-
-
-    # -----------------------------------------------------
-    # COLONNE 2
-    # -----------------------------------------------------
 
     with col2:
 
-        st.session_state.produits[i]["prix_achat"] = (
-            st.number_input(
-                "Prix d'achat auprès du fournisseur (FCFA)",
-                min_value=0,
-                step=50,
-                key=f"prix_achat_{i}"
-            )
+        st.session_state.produits[i]["prix_achat"] = st.number_input(
+            "Prix d'achat auprès du fournisseur (FCFA)",
+            min_value=0,
+            step=50,
+            key=f"prix_achat_{i}"
         )
 
-
-        st.session_state.produits[i]["prix_vente"] = (
-            st.number_input(
-                "Prix de vente au client (FCFA)",
-                min_value=0,
-                step=50,
-                key=f"prix_vente_{i}"
-            )
+        st.session_state.produits[i]["prix_vente"] = st.number_input(
+            "Prix de vente au client (FCFA)",
+            min_value=0,
+            step=50,
+            key=f"prix_vente_{i}"
         )
 
-
-        st.session_state.produits[i]["quantite_achetee"] = (
-            st.number_input(
-                "Quantité achetée par mois",
-                min_value=0,
-                step=1,
-                key=f"quantite_achetee_{i}"
-            )
+        st.session_state.produits[i]["quantite_achetee"] = st.number_input(
+            "Quantité achetée par mois",
+            min_value=0,
+            step=1,
+            key=f"quantite_achetee_{i}"
         )
 
-
-        st.session_state.produits[i]["quantite_vendue"] = (
-            st.number_input(
-                "Quantité vendue par mois",
-                min_value=0,
-                step=1,
-                key=f"quantite_vendue_{i}"
-            )
+        st.session_state.produits[i]["quantite_vendue"] = st.number_input(
+            "Quantité vendue par mois",
+            min_value=0,
+            step=1,
+            key=f"quantite_vendue_{i}"
         )
-
 
     st.divider()
 
@@ -508,20 +302,18 @@ for i in range(
 # AJOUTER UN PRODUIT
 # =========================================================
 
-if st.button(
-    "➕ Ajouter une autre marque / produit"
-):
+if st.button("➕ Ajouter une autre marque / produit"):
 
     st.session_state.produits.append(
         {
             "produit": "",
             "marque": "",
             "format": "",
-            "nombre_unites": "",
-            "prix_achat": "",
-            "prix_vente": "",
-            "quantite_achetee": "",
-            "quantite_vendue": ""
+            "nombre_unites": 0,
+            "prix_achat": 0,
+            "prix_vente": 0,
+            "quantite_achetee": 0,
+            "quantite_vendue": 0
         }
     )
 
@@ -532,10 +324,7 @@ if st.button(
 # 4. APPROVISIONNEMENT
 # =========================================================
 
-st.subheader(
-    "4. Approvisionnement"
-)
-
+st.subheader("4. Approvisionnement")
 
 fournisseur = st.text_input(
     "Nom ou code du fournisseur"
@@ -610,10 +399,7 @@ cout_transport = st.number_input(
 # 5. RUPTURE DE STOCK
 # =========================================================
 
-st.subheader(
-    "5. Rupture de stock"
-)
-
+st.subheader("5. Rupture de stock")
 
 rupture_stock = st.selectbox(
     "Avez-vous connu une rupture de stock au cours des 12 derniers mois ?",
@@ -638,7 +424,6 @@ if rupture_stock == "Oui":
         ]
     )
 
-
     raison_rupture = st.multiselect(
         "Quelles sont les principales raisons des ruptures ?",
         [
@@ -656,7 +441,6 @@ if rupture_stock == "Oui":
 else:
 
     frequence_rupture = ""
-
     raison_rupture = []
 
 
@@ -664,10 +448,7 @@ else:
 # 6. DEMANDE ET COMMERCIALISATION
 # =========================================================
 
-st.subheader(
-    "6. Demande et commercialisation"
-)
-
+st.subheader("6. Demande et commercialisation")
 
 produit_plus_demande = st.multiselect(
     "Quels produits sont les plus demandés par vos clients ?",
@@ -716,10 +497,7 @@ evolution_demande = st.selectbox(
 # 7. DIFFICULTÉS COMMERCIALES
 # =========================================================
 
-st.subheader(
-    "7. Difficultés rencontrées"
-)
-
+st.subheader("7. Difficultés rencontrées")
 
 difficultes = st.multiselect(
     "Quelles difficultés rencontrez-vous dans la commercialisation ?",
@@ -742,17 +520,11 @@ difficultes = st.multiselect(
 # 8. ENREGISTREMENT
 # =========================================================
 
-st.subheader(
-    "8. Enregistrement"
-)
+st.subheader("8. Enregistrement")
 
-
-if st.button(
-    "💾 Enregistrer la réponse"
-):
+if st.button("💾 Enregistrer la réponse"):
 
     donnees = []
-
 
     for produit in st.session_state.produits:
 
@@ -767,44 +539,31 @@ if st.button(
                 - produit["prix_achat"]
             )
 
-
             ligne = {
 
-                "Code_point_vente":
-                    code_point_vente,
+                "Code_point_vente": code_point_vente,
 
-                "Type_commerce":
-                    type_commerce,
+                "Type_commerce": type_commerce,
 
-                "Nom_grande_surface":
-                    nom_grande_surface,
+                "Nom_grande_surface": nom_grande_surface,
 
-                "Ville":
-                    ville,
+                "Ville": ville,
 
-                "Quartier":
-                    quartier,
+                "Quartier": quartier,
 
-                "Produit":
-                    produit["produit"],
+                "Produit": produit["produit"],
 
-                "Marque":
-                    produit["marque"],
+                "Marque": produit["marque"],
 
-                "Type_conditionnement":
-                    produit["format"],
+                "Type_conditionnement": produit["format"],
 
-                "Nombre_unites":
-                    produit["nombre_unites"],
+                "Nombre_unites": produit["nombre_unites"],
 
-                "Prix_achat_FCFA":
-                    produit["prix_achat"],
+                "Prix_achat_FCFA": produit["prix_achat"],
 
-                "Prix_vente_FCFA":
-                    produit["prix_vente"],
+                "Prix_vente_FCFA": produit["prix_vente"],
 
-                "Marge_FCFA":
-                    marge,
+                "Marge_FCFA": marge,
 
                 "Quantite_achetee_mois":
                     produit["quantite_achetee"],
@@ -812,17 +571,14 @@ if st.button(
                 "Quantite_vendue_mois":
                     produit["quantite_vendue"],
 
-                "Fournisseur":
-                    fournisseur,
+                "Fournisseur": fournisseur,
 
                 "Mode_approvisionnement":
                     mode_approvisionnement,
 
-                "Origine":
-                    origine,
+                "Origine": origine,
 
-                "Pays_origine":
-                    pays_origine,
+                "Pays_origine": pays_origine,
 
                 "Frequence_approvisionnement":
                     frequence_approvisionnement,
@@ -840,29 +596,20 @@ if st.button(
                     frequence_rupture,
 
                 "Raison_rupture":
-                    ", ".join(
-                        raison_rupture
-                    ),
+                    ", ".join(raison_rupture),
 
                 "Produits_plus_demandes":
-                    ", ".join(
-                        produit_plus_demande
-                    ),
+                    ", ".join(produit_plus_demande),
 
                 "Criteres_achat":
-                    ", ".join(
-                        criteres_achat
-                    ),
+                    ", ".join(criteres_achat),
 
                 "Evolution_demande":
                     evolution_demande,
 
                 "Difficultes_commercialisation":
-                    ", ".join(
-                        difficultes
-                    )
+                    ", ".join(difficultes)
             }
-
 
             donnees.append(ligne)
 
@@ -871,24 +618,19 @@ if st.button(
     # VÉRIFICATION
     # =====================================================
 
-    if len(donnees) == 0:
+    if not donnees:
 
         st.warning(
-            "⚠️ Veuillez renseigner au moins "
-            "un produit et une marque."
+            "⚠️ Veuillez renseigner au moins un produit "
+            "et une marque."
         )
 
     else:
 
-        nouveau_df = pd.DataFrame(
-            donnees
-        )
+        nouveau_df = pd.DataFrame(donnees)
 
         dossier = "donnees"
-
-        fichier = (
-            "donnees/enquete.csv"
-        )
+        fichier = "donnees/enquete.csv"
 
         os.makedirs(
             dossier,
@@ -897,32 +639,23 @@ if st.button(
 
 
         # =================================================
-        # LECTURE DU CSV EXISTANT
+        # AJOUT AU CSV EXISTANT
         # =================================================
 
-        if (
-            os.path.exists(fichier)
-            and os.path.getsize(fichier) > 0
-        ):
+        if os.path.exists(fichier):
 
-            try:
+            ancien_df = pd.read_csv(
+                fichier,
+                encoding="utf-8-sig"
+            )
 
-                ancien_df = pd.read_csv(
-                    fichier,
-                    encoding="utf-8-sig"
-                )
-
-                final_df = pd.concat(
-                    [
-                        ancien_df,
-                        nouveau_df
-                    ],
-                    ignore_index=True
-                )
-
-            except pd.errors.EmptyDataError:
-
-                final_df = nouveau_df
+            final_df = pd.concat(
+                [
+                    ancien_df,
+                    nouveau_df
+                ],
+                ignore_index=True
+            )
 
         else:
 
@@ -930,7 +663,7 @@ if st.button(
 
 
         # =================================================
-        # ENREGISTREMENT
+        # ENREGISTREMENT CSV
         # =================================================
 
         final_df.to_csv(
@@ -942,9 +675,8 @@ if st.button(
 
         st.success(
             f"✅ Réponse de {code_point_vente} "
-            "enregistrée avec succès."
+            "enregistrée avec succès dans le fichier CSV."
         )
-
 
         st.info(
             "Vous pouvez maintenant cliquer sur "
@@ -959,39 +691,25 @@ if st.button(
 
 st.divider()
 
+if st.button("🆕 Nouveau questionnaire"):
 
-if st.button(
-    "🆕 Nouveau questionnaire"
-):
+    # Générer le prochain code à partir du fichier CSV
+    nouveau_code = obtenir_prochain_code()
 
-    nouveau_code = (
-        obtenir_prochain_code()
-    )
+    st.session_state.code_point_vente = nouveau_code
 
+    # Réinitialiser les produits
+    st.session_state.produits = initialiser_produits()
 
-    st.session_state.code_point_vente = (
-        nouveau_code
-    )
-
-
-    st.session_state.produits = (
-        initialiser_produits()
-    )
-
-
+    # Supprimer les anciennes valeurs des widgets
     cles_a_conserver = [
         "code_point_vente",
         "produits"
     ]
 
-
-    for key in list(
-        st.session_state.keys()
-    ):
+    for key in list(st.session_state.keys()):
 
         if key not in cles_a_conserver:
-
             del st.session_state[key]
-
 
     st.rerun()
