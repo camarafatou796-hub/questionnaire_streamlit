@@ -1,1 +1,7 @@
-
+﻿Code_point_vente,Type_commerce,Nom_grande_surface,Ville,Quartier,Produit,Marque,Format,Nombre_unites,Prix_achat_FCFA,Prix_vente_FCFA,Quantite_vendue_mois,Fournisseur,Origine,Rupture_stock,Frequence_rupture,Type_conditionnement,Marge_FCFA,Quantite_achetee_mois,Mode_approvisionnement,Pays_origine,Frequence_approvisionnement,Delai_approvisionnement,Cout_transport_FCFA,Raison_rupture,Produits_plus_demandes,Criteres_achat,Evolution_demande,Difficultes_commercialisation
+PV0001,Grande surface,Auchan,Dakar,Mermoz-Sacré-Cœur,Serviettes hygiéniques,Tima,Paquet,8,400,900,200,Transpaps,Importé,Non,,,,,,,,,,,,,,
+PV0001,Grande surface,Auchan,Dakar,Mermoz-Sacré-Cœur,Serviettes hygiéniques,Always,Paquet,7,700,1000,400,Transpaps,Importé,Non,,,,,,,,,,,,,,
+PV0001,Grande surface,Auchan,Dakar,Mermoz-Sacré-Cœur,Autre,Auchan,Paquet,10,600,1100,300,Transpaps,Importé,Non,,,,,,,,,,,,,,
+PV0001,Grande surface,Auchan,Dakar,Mermoz-Sacré-Cœur,Protège-slips,Auchan,Boîte,50,1000,2500,150,Transpaps,Importé,Non,,,,,,,,,,,,,,
+PV0001,Grande surface,Auchan,Dakar,Mermoz-Sacré-Cœur,Tampons,Cosmia,Boîte,16,1500,5000,90,Transpaps,Importé,Non,,,,,,,,,,,,,,
+PV0002,Pharmacie,,Dakar,Médina,Serviettes hygiéniques,TEST,,10,900,1600,20,xxx,Importé,Oui,Occasionnellement,Paquet,700.0,50.0,Distributeur,france,Une fois par mois,3 à 7 jours,17000.0,Difficulté d'approvisionnement,Serviettes hygiéniques,Qualité,En augmentation,"Prix d'achat élevé, Difficultés d'approvisionnement"
