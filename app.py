@@ -22,44 +22,95 @@ st.markdown(
     """
     <style>
 
-    /* Fond général vert clair */
+    /* =====================================================
+       FOND NOIR
+       ===================================================== */
+
     .stApp {
-        background-color: #E8F5E9;
+        background-color: #0E1117;
     }
 
-    /* Zone principale */
-    .main .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
+
+    /* =====================================================
+       TEXTE BLANC
+       ===================================================== */
+
+    .stApp p,
+    .stApp label,
+    .stApp h1,
+    .stApp h2,
+    .stApp h3 {
+        color: white !important;
     }
 
-    /* Titres */
-    h1 {
-        color: #1B5E20;
+
+    /* =====================================================
+       CHOIX MULTIPLES SÉLECTIONNÉS
+       ===================================================== */
+
+    div[data-baseweb="tag"] {
+        background-color: #2E7D32 !important;
+        color: white !important;
+        border-color: #2E7D32 !important;
     }
 
-    h2, h3 {
-        color: #2E7D32;
+    div[data-baseweb="tag"] span {
+        color: white !important;
     }
 
-    /* Boutons */
+    div[data-baseweb="tag"] svg {
+        fill: white !important;
+    }
+
+
+    /* =====================================================
+       OPTIONS SÉLECTIONNÉES DANS LES MENUS
+       ===================================================== */
+
+    div[role="option"][aria-selected="true"] {
+        background-color: #2E7D32 !important;
+        color: white !important;
+    }
+
+    div[role="option"][aria-selected="true"] span {
+        color: white !important;
+    }
+
+
+    /* =====================================================
+       CASES À COCHER
+       ===================================================== */
+
+    div[data-testid="stCheckbox"] label {
+        color: white !important;
+    }
+
+
+    /* =====================================================
+       BOUTONS
+       ===================================================== */
+
     .stButton > button {
-        background-color: #2E7D32;
-        color: white;
-        border: none;
+        background-color: #2E7D32 !important;
+        color: white !important;
+        border: 1px solid #2E7D32 !important;
         border-radius: 8px;
-        padding: 0.5rem 1rem;
         font-weight: bold;
     }
 
     .stButton > button:hover {
-        background-color: #1B5E20;
-        color: white;
+        background-color: #1B5E20 !important;
+        color: white !important;
+        border-color: #1B5E20 !important;
     }
 
-    /* Encadrés */
-    .stAlert {
-        border-radius: 8px;
+
+    /* =====================================================
+       SÉPARATEURS
+       ===================================================== */
+
+    hr {
+        border-color: #2E7D32 !important;
     }
 
     </style>
@@ -69,22 +120,18 @@ st.markdown(
 
 
 # =========================================================
-# FONCTIONS
+# FONCTION : PROCHAIN CODE POINT DE VENTE
 # =========================================================
 
 def obtenir_prochain_code():
-    """
-    Cherche le dernier code enregistré dans le fichier CSV
-    et génère automatiquement le code suivant.
-    """
 
     fichier = "donnees/enquete.csv"
 
-    # Si le fichier n'existe pas
+    # Le fichier n'existe pas
     if not os.path.exists(fichier):
         return "PV0001"
 
-    # Si le fichier existe mais est vide
+    # Le fichier existe mais il est vide
     if os.path.getsize(fichier) == 0:
         return "PV0001"
 
@@ -95,7 +142,12 @@ def obtenir_prochain_code():
             encoding="utf-8-sig"
         )
 
-        if "Code_point_vente" not in df.columns or df.empty:
+        # Fichier vide
+        if df.empty:
+            return "PV0001"
+
+        # Colonne absente
+        if "Code_point_vente" not in df.columns:
             return "PV0001"
 
         codes = (
@@ -137,10 +189,11 @@ def obtenir_prochain_code():
         return "PV0001"
 
 
+# =========================================================
+# FONCTION : INITIALISER LES PRODUITS
+# =========================================================
+
 def initialiser_produits():
-    """
-    Crée une nouvelle ligne de produit.
-    """
 
     return [
         {
@@ -157,7 +210,7 @@ def initialiser_produits():
 
 
 # =========================================================
-# INITIALISATION DU CODE POINT DE VENTE
+# INITIALISATION DU CODE
 # =========================================================
 
 if "code_point_vente" not in st.session_state:
@@ -166,7 +219,9 @@ if "code_point_vente" not in st.session_state:
         obtenir_prochain_code()
     )
 
-code_point_vente = st.session_state.code_point_vente
+code_point_vente = (
+    st.session_state.code_point_vente
+)
 
 
 # =========================================================
@@ -202,6 +257,7 @@ st.subheader(
     "1. Informations sur le point de vente"
 )
 
+
 st.text_input(
     "Code du point de vente",
     value=code_point_vente,
@@ -223,8 +279,6 @@ type_commerce = st.selectbox(
 )
 
 
-# Grande surface
-
 if type_commerce == "Grande surface":
 
     nom_grande_surface = st.selectbox(
@@ -245,8 +299,6 @@ else:
     nom_grande_surface = ""
 
 
-# Ville
-
 ville = st.selectbox(
     "Dans quelle ville se situe votre point de vente ?",
     [
@@ -262,8 +314,6 @@ ville = st.selectbox(
     ]
 )
 
-
-# Quartier
 
 quartier = st.selectbox(
     "Dans quel quartier se situe votre point de vente ?",
@@ -302,6 +352,7 @@ st.write(
     "Quels produits sont actuellement commercialisés "
     "dans votre point de vente ?"
 )
+
 
 serviettes = st.checkbox(
     "Serviettes hygiéniques"
@@ -369,12 +420,14 @@ for i in range(
             )
         )
 
+
         st.session_state.produits[i]["marque"] = (
             st.text_input(
                 "Marque",
                 key=f"marque_{i}"
             )
         )
+
 
         st.session_state.produits[i]["format"] = (
             st.selectbox(
@@ -390,6 +443,7 @@ for i in range(
                 key=f"format_{i}"
             )
         )
+
 
         st.session_state.produits[i]["nombre_unites"] = (
             st.number_input(
@@ -416,6 +470,7 @@ for i in range(
             )
         )
 
+
         st.session_state.produits[i]["prix_vente"] = (
             st.number_input(
                 "Prix de vente au client (FCFA)",
@@ -424,6 +479,7 @@ for i in range(
                 key=f"prix_vente_{i}"
             )
         )
+
 
         st.session_state.produits[i]["quantite_achetee"] = (
             st.number_input(
@@ -434,6 +490,7 @@ for i in range(
             )
         )
 
+
         st.session_state.produits[i]["quantite_vendue"] = (
             st.number_input(
                 "Quantité vendue par mois",
@@ -443,11 +500,12 @@ for i in range(
             )
         )
 
+
     st.divider()
 
 
 # =========================================================
-# AJOUTER UNE AUTRE MARQUE / PRODUIT
+# AJOUTER UN PRODUIT
 # =========================================================
 
 if st.button(
@@ -580,6 +638,7 @@ if rupture_stock == "Oui":
         ]
     )
 
+
     raison_rupture = st.multiselect(
         "Quelles sont les principales raisons des ruptures ?",
         [
@@ -597,6 +656,7 @@ if rupture_stock == "Oui":
 else:
 
     frequence_rupture = ""
+
     raison_rupture = []
 
 
@@ -702,8 +762,6 @@ if st.button(
             and produit["marque"].strip() != ""
         ):
 
-            # Calcul de la marge
-
             marge = (
                 produit["prix_vente"]
                 - produit["prix_achat"]
@@ -805,6 +863,7 @@ if st.button(
                     )
             }
 
+
             donnees.append(ligne)
 
 
@@ -871,7 +930,7 @@ if st.button(
 
 
         # =================================================
-        # ENREGISTREMENT CSV
+        # ENREGISTREMENT
         # =================================================
 
         final_df.to_csv(
@@ -909,9 +968,11 @@ if st.button(
         obtenir_prochain_code()
     )
 
+
     st.session_state.code_point_vente = (
         nouveau_code
     )
+
 
     st.session_state.produits = (
         initialiser_produits()
