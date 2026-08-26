@@ -205,7 +205,8 @@ produits_commercialises = st.multiselect(
         "Tampons",
         "Coupe menstruelle",
         "Autre"
-    ]
+    ],
+    placeholder="Sélectionner"
 )
 
 
