@@ -27,9 +27,7 @@ try:
     )
 
 except Exception:
-    st.error(
-        "❌ Impossible de se connecter à Supabase."
-    )
+    st.error("❌ Impossible de se connecter à Supabase.")
     st.stop()
 
 
@@ -54,28 +52,25 @@ def obtenir_prochain_code():
 
         for ligne in lignes:
 
-            code = ligne.get(
-                "code_point_vente",
-                ""
-            )
+            code = str(
+                ligne.get("code_point_vente", "")
+            ).strip()
 
-            if code.startswith("PV"):
+            # On accepte uniquement les codes du type PV0001
+            if (
+                len(code) == 6
+                and code.startswith("PV")
+                and code[2:].isdigit()
+            ):
 
-                try:
+                numero = int(code[2:])
 
-                    numero = int(
-                        code[2:]
-                    )
+                numeros.append(numero)
 
-                    numeros.append(numero)
-
-                except ValueError:
-
-                    pass
-
-        prochain_numero = (
-            max(numeros, default=0) + 1
-        )
+        prochain_numero = max(
+            numeros,
+            default=0
+        ) + 1
 
         return f"PV{prochain_numero:04d}"
 
@@ -150,13 +145,11 @@ st.subheader(
     "1. Informations sur le point de vente"
 )
 
-
 st.text_input(
     "Code du point de vente",
     value=code_point_vente,
     disabled=True
 )
-
 
 type_commerce = st.selectbox(
     "Quel est le type de votre point de vente ?",
@@ -170,7 +163,6 @@ type_commerce = st.selectbox(
         "Autre"
     ]
 )
-
 
 ville = st.selectbox(
     "Dans quelle ville se situe votre point de vente ?",
@@ -187,7 +179,6 @@ ville = st.selectbox(
     ]
 )
 
-
 quartier = st.text_input(
     "Dans quel quartier se situe votre point de vente ?"
 )
@@ -201,12 +192,10 @@ st.subheader(
     "2. Produits de protection menstruelle commercialisés"
 )
 
-
 st.write(
     "Quels produits de protection menstruelle "
     "commercialisez-vous ?"
 )
-
 
 produits_commercialises = st.multiselect(
     "Sélectionnez les produits commercialisés",
@@ -228,12 +217,10 @@ st.subheader(
     "3. Produits, marques, formats et prix"
 )
 
-
 st.write(
     "Renseignez les produits commercialisés dans "
     "votre point de vente."
 )
-
 
 for i in range(
     len(st.session_state.produits)
@@ -244,11 +231,6 @@ for i in range(
     )
 
     col1, col2 = st.columns(2)
-
-
-    # -----------------------------------------------------
-    # COLONNE 1
-    # -----------------------------------------------------
 
     with col1:
 
@@ -267,14 +249,12 @@ for i in range(
             )
         )
 
-
         st.session_state.produits[i]["marque"] = (
             st.text_input(
                 "Marque",
                 key=f"marque_{i}"
             )
         )
-
 
         st.session_state.produits[i]["format"] = (
             st.selectbox(
@@ -291,7 +271,6 @@ for i in range(
             )
         )
 
-
         st.session_state.produits[i]["nombre_unites"] = (
             st.number_input(
                 "Nombre d'unités dans le conditionnement",
@@ -300,11 +279,6 @@ for i in range(
                 key=f"nombre_unites_{i}"
             )
         )
-
-
-    # -----------------------------------------------------
-    # COLONNE 2
-    # -----------------------------------------------------
 
     with col2:
 
@@ -317,7 +291,6 @@ for i in range(
             )
         )
 
-
         st.session_state.produits[i]["quantite_vendue"] = (
             st.number_input(
                 "Quantité vendue par mois",
@@ -326,7 +299,6 @@ for i in range(
                 key=f"quantite_vendue_{i}"
             )
         )
-
 
         st.session_state.produits[i]["origine"] = (
             st.selectbox(
@@ -340,11 +312,6 @@ for i in range(
                 key=f"origine_{i}"
             )
         )
-
-
-        # -------------------------------------------------
-        # PAYS D'ORIGINE SI PRODUIT IMPORTÉ
-        # -------------------------------------------------
 
         if (
             st.session_state.produits[i]["origine"]
@@ -362,7 +329,6 @@ for i in range(
         else:
 
             st.session_state.produits[i]["pays_origine"] = ""
-
 
     st.divider()
 
@@ -399,7 +365,6 @@ st.subheader(
     "4. Approvisionnement"
 )
 
-
 frequence_approvisionnement = st.selectbox(
     "À quelle fréquence votre point de vente "
     "s'approvisionne-t-il ?",
@@ -422,7 +387,6 @@ frequence_approvisionnement = st.selectbox(
 st.subheader(
     "5. Problèmes d'approvisionnement"
 )
-
 
 problemes_approvisionnement = st.multiselect(
     "Quels sont les principaux problèmes "
@@ -448,7 +412,6 @@ st.subheader(
     "6. Demande"
 )
 
-
 produits_plus_demandes = st.multiselect(
     "Quels produits sont les plus demandés ?",
     [
@@ -459,7 +422,6 @@ produits_plus_demandes = st.multiselect(
         "Autre"
     ]
 )
-
 
 criteres_achat = st.multiselect(
     "Quels critères déterminent le choix d'un produit "
@@ -477,7 +439,6 @@ criteres_achat = st.multiselect(
         "Autre"
     ]
 )
-
 
 evolution_demande = st.selectbox(
     "Quelle évolution de la demande observez-vous ?",
@@ -501,17 +462,11 @@ st.subheader(
     "7. Enregistrement"
 )
 
-
 if st.button(
     "💾 Enregistrer la réponse"
 ):
 
     donnees = []
-
-
-    # -----------------------------------------------------
-    # VÉRIFICATION DU POINT DE VENTE
-    # -----------------------------------------------------
 
     if type_commerce == "Sélectionner":
 
@@ -521,7 +476,6 @@ if st.button(
 
         st.stop()
 
-
     if ville == "Sélectionner":
 
         st.warning(
@@ -530,7 +484,6 @@ if st.button(
 
         st.stop()
 
-
     if not produits_plus_demandes:
 
         st.warning(
@@ -538,11 +491,6 @@ if st.button(
         )
 
         st.stop()
-
-
-    # -----------------------------------------------------
-    # CRÉATION DES LIGNES
-    # -----------------------------------------------------
 
     for produit in st.session_state.produits:
 
@@ -612,13 +560,7 @@ if st.button(
                     evolution_demande
             }
 
-
             donnees.append(ligne)
-
-
-    # -----------------------------------------------------
-    # VÉRIFICATION PRODUIT
-    # -----------------------------------------------------
 
     if not donnees:
 
@@ -627,32 +569,24 @@ if st.button(
             "un produit et une marque."
         )
 
-
     else:
 
         try:
-
-            # ---------------------------------------------
-            # INSERTION DANS SUPABASE
-            # ---------------------------------------------
 
             supabase \
                 .table("reponses_enquete") \
                 .insert(donnees) \
                 .execute()
 
-
             st.success(
                 f"✅ Réponse de {code_point_vente} "
                 "enregistrée avec succès dans Supabase."
             )
 
-
             st.info(
                 "Les données sont maintenant enregistrées "
                 "dans la base de données."
             )
-
 
         except Exception as e:
 
@@ -672,34 +606,26 @@ if st.button(
 
 st.divider()
 
-
 if st.button(
     "🆕 Nouveau questionnaire"
 ):
 
-    # Générer le prochain code
     nouveau_code = (
         obtenir_prochain_code()
     )
-
 
     st.session_state.code_point_vente = (
         nouveau_code
     )
 
-
-    # Réinitialiser les produits
     st.session_state.produits = (
         initialiser_produits()
     )
 
-
-    # Réinitialiser les autres widgets
     cles_a_conserver = [
         "code_point_vente",
         "produits"
     ]
-
 
     for key in list(
         st.session_state.keys()
@@ -708,6 +634,5 @@ if st.button(
         if key not in cles_a_conserver:
 
             del st.session_state[key]
-
 
     st.rerun()
