@@ -1,6 +1,5 @@
 import streamlit as st
 from supabase import create_client
-from datetime import datetime
 
 
 # =========================================================
@@ -15,82 +14,10 @@ st.set_page_config(
 
 
 # =========================================================
-# STYLE DE L'APPLICATION
-# =========================================================
-
-st.markdown(
-    """
-    <style>
-
-    .stApp {
-        background-color: #0E1117;
-    }
-
-    .stApp p,
-    .stApp label,
-    .stApp h1,
-    .stApp h2,
-    .stApp h3 {
-        color: white !important;
-    }
-
-    div[data-baseweb="tag"] {
-        background-color: #2E7D32 !important;
-        color: white !important;
-        border-color: #2E7D32 !important;
-    }
-
-    div[data-baseweb="tag"] span {
-        color: white !important;
-    }
-
-    div[data-baseweb="tag"] svg {
-        fill: white !important;
-    }
-
-    div[role="option"][aria-selected="true"] {
-        background-color: #2E7D32 !important;
-        color: white !important;
-    }
-
-    div[role="option"][aria-selected="true"] span {
-        color: white !important;
-    }
-
-    div[data-testid="stCheckbox"] label {
-        color: white !important;
-    }
-
-    .stButton > button {
-        background-color: #2E7D32 !important;
-        color: white !important;
-        border: 1px solid #2E7D32 !important;
-        border-radius: 8px;
-        font-weight: bold;
-    }
-
-    .stButton > button:hover {
-        background-color: #1B5E20 !important;
-        color: white !important;
-        border-color: #1B5E20 !important;
-    }
-
-    hr {
-        border-color: #2E7D32 !important;
-    }
-
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-
-# =========================================================
 # CONNEXION SUPABASE
 # =========================================================
 
 try:
-
     SUPABASE_URL = st.secrets["SUPABASE_URL"]
     SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 
@@ -100,35 +27,68 @@ try:
     )
 
 except Exception:
-
     st.error(
         "❌ Impossible de se connecter à Supabase."
     )
-
     st.stop()
 
 
 # =========================================================
-# FONCTIONS
+# FONCTION : GÉNÉRER PV0001, PV0002, PV0003...
 # =========================================================
 
 def obtenir_prochain_code():
-    """
-    Génère un code unique pour le point de vente
-    à partir de la date et de l'heure.
-    """
 
-    maintenant = datetime.now()
+    try:
 
-    return maintenant.strftime(
-        "PV%Y%m%d%H%M%S"
-    )
+        reponse = (
+            supabase
+            .table("reponses_enquete")
+            .select("code_point_vente")
+            .execute()
+        )
 
+        lignes = reponse.data or []
+
+        numeros = []
+
+        for ligne in lignes:
+
+            code = ligne.get(
+                "code_point_vente",
+                ""
+            )
+
+            if code.startswith("PV"):
+
+                try:
+
+                    numero = int(
+                        code[2:]
+                    )
+
+                    numeros.append(numero)
+
+                except ValueError:
+
+                    pass
+
+        prochain_numero = (
+            max(numeros, default=0) + 1
+        )
+
+        return f"PV{prochain_numero:04d}"
+
+    except Exception:
+
+        return "PV0001"
+
+
+# =========================================================
+# INITIALISATION DES PRODUITS
+# =========================================================
 
 def initialiser_produits():
-    """
-    Crée une nouvelle ligne de produit.
-    """
 
     return [
         {
@@ -136,16 +96,16 @@ def initialiser_produits():
             "marque": "",
             "format": "",
             "nombre_unites": 0,
-            "prix_achat": 0,
             "prix_vente": 0,
-            "quantite_achetee": 0,
-            "quantite_vendue": 0
+            "quantite_vendue": 0,
+            "origine": "",
+            "pays_origine": ""
         }
     ]
 
 
 # =========================================================
-# INITIALISATION
+# INITIALISATION SESSION
 # =========================================================
 
 if "code_point_vente" not in st.session_state:
@@ -176,8 +136,9 @@ st.title(
 )
 
 st.write(
-    "Importation et commercialisation des produits "
-    "de protection menstruelle au Sénégal."
+    "Cette enquête vise à analyser la demande et la "
+    "commercialisation des produits de protection "
+    "menstruelle au Sénégal."
 )
 
 
@@ -188,6 +149,7 @@ st.write(
 st.subheader(
     "1. Informations sur le point de vente"
 )
+
 
 st.text_input(
     "Code du point de vente",
@@ -210,26 +172,6 @@ type_commerce = st.selectbox(
 )
 
 
-if type_commerce == "Grande surface":
-
-    nom_grande_surface = st.selectbox(
-        "Quel est le nom de la grande surface ?",
-        [
-            "Sélectionner",
-            "Auchan",
-            "Carrefour",
-            "Casino",
-            "Supeco",
-            "Exclusive",
-            "Autre"
-        ]
-    )
-
-else:
-
-    nom_grande_surface = ""
-
-
 ville = st.selectbox(
     "Dans quelle ville se situe votre point de vente ?",
     [
@@ -246,28 +188,8 @@ ville = st.selectbox(
 )
 
 
-quartier = st.selectbox(
-    "Dans quel quartier se situe votre point de vente ?",
-    [
-        "Sélectionner",
-        "Plateau",
-        "Médina",
-        "Hann",
-        "Fann",
-        "Point E",
-        "Mermoz-Sacré-Cœur",
-        "Amitié",
-        "Les Almadies",
-        "Ngor",
-        "Ouakam",
-        "Yoff",
-        "Mamelles",
-        "Grand Dakar",
-        "Les Libertés",
-        "Pikine",
-        "Guédiawaye",
-        "Autre"
-    ]
+quartier = st.text_input(
+    "Dans quel quartier se situe votre point de vente ?"
 )
 
 
@@ -279,42 +201,37 @@ st.subheader(
     "2. Produits de protection menstruelle commercialisés"
 )
 
+
 st.write(
-    "Quels produits sont actuellement commercialisés "
-    "dans votre point de vente ?"
+    "Quels produits de protection menstruelle "
+    "commercialisez-vous ?"
 )
 
-serviettes = st.checkbox(
-    "Serviettes hygiéniques"
-)
 
-protege_slips = st.checkbox(
-    "Protège-slips"
-)
-
-tampons = st.checkbox(
-    "Tampons"
-)
-
-coupe_menstruelle = st.checkbox(
-    "Coupe menstruelle"
-)
-
-autre_produit = st.checkbox(
-    "Autre"
+produits_commercialises = st.multiselect(
+    "Sélectionnez les produits commercialisés",
+    [
+        "Serviettes hygiéniques",
+        "Protège-slips",
+        "Tampons",
+        "Coupe menstruelle",
+        "Autre"
+    ]
 )
 
 
 # =========================================================
-# 3. MARQUES, CONDITIONNEMENT ET PRIX
+# 3. PRODUITS, MARQUES, FORMATS ET PRIX
 # =========================================================
 
 st.subheader(
-    "3. Marques, conditionnement et prix"
+    "3. Produits, marques, formats et prix"
 )
 
+
 st.write(
-    "Ajoutez chaque produit et chaque marque commercialisés."
+    "Renseignez les produits commercialisés dans "
+    "votre point de vente."
 )
 
 
@@ -327,6 +244,11 @@ for i in range(
     )
 
     col1, col2 = st.columns(2)
+
+
+    # -----------------------------------------------------
+    # COLONNE 1
+    # -----------------------------------------------------
 
     with col1:
 
@@ -345,6 +267,7 @@ for i in range(
             )
         )
 
+
         st.session_state.produits[i]["marque"] = (
             st.text_input(
                 "Marque",
@@ -352,9 +275,10 @@ for i in range(
             )
         )
 
+
         st.session_state.produits[i]["format"] = (
             st.selectbox(
-                "Type de conditionnement",
+                "Format",
                 [
                     "Sélectionner",
                     "Paquet",
@@ -367,6 +291,7 @@ for i in range(
             )
         )
 
+
         st.session_state.produits[i]["nombre_unites"] = (
             st.number_input(
                 "Nombre d'unités dans le conditionnement",
@@ -376,34 +301,22 @@ for i in range(
             )
         )
 
-    with col2:
 
-        st.session_state.produits[i]["prix_achat"] = (
-            st.number_input(
-                "Prix d'achat auprès du fournisseur (FCFA)",
-                min_value=0,
-                step=50,
-                key=f"prix_achat_{i}"
-            )
-        )
+    # -----------------------------------------------------
+    # COLONNE 2
+    # -----------------------------------------------------
+
+    with col2:
 
         st.session_state.produits[i]["prix_vente"] = (
             st.number_input(
-                "Prix de vente au client (FCFA)",
+                "Prix de vente (FCFA)",
                 min_value=0,
                 step=50,
                 key=f"prix_vente_{i}"
             )
         )
 
-        st.session_state.produits[i]["quantite_achetee"] = (
-            st.number_input(
-                "Quantité achetée par mois",
-                min_value=0,
-                step=1,
-                key=f"quantite_achetee_{i}"
-            )
-        )
 
         st.session_state.produits[i]["quantite_vendue"] = (
             st.number_input(
@@ -414,15 +327,52 @@ for i in range(
             )
         )
 
+
+        st.session_state.produits[i]["origine"] = (
+            st.selectbox(
+                "Origine du produit",
+                [
+                    "Sélectionner",
+                    "Importé",
+                    "Local",
+                    "Les deux"
+                ],
+                key=f"origine_{i}"
+            )
+        )
+
+
+        # -------------------------------------------------
+        # PAYS D'ORIGINE SI PRODUIT IMPORTÉ
+        # -------------------------------------------------
+
+        if (
+            st.session_state.produits[i]["origine"]
+            == "Importé"
+        ):
+
+            st.session_state.produits[i]["pays_origine"] = (
+                st.text_input(
+                    "Pays d'origine",
+                    key=f"pays_origine_{i}",
+                    placeholder="Exemple : Espagne"
+                )
+            )
+
+        else:
+
+            st.session_state.produits[i]["pays_origine"] = ""
+
+
     st.divider()
 
 
 # =========================================================
-# AJOUTER UN PRODUIT
+# AJOUTER UN AUTRE PRODUIT
 # =========================================================
 
 if st.button(
-    "➕ Ajouter une autre marque / produit"
+    "➕ Ajouter un autre produit / une autre marque"
 ):
 
     st.session_state.produits.append(
@@ -431,10 +381,10 @@ if st.button(
             "marque": "",
             "format": "",
             "nombre_unites": 0,
-            "prix_achat": 0,
             "prix_vente": 0,
-            "quantite_achetee": 0,
-            "quantite_vendue": 0
+            "quantite_vendue": 0,
+            "origine": "",
+            "pays_origine": ""
         }
     )
 
@@ -450,43 +400,9 @@ st.subheader(
 )
 
 
-fournisseur = st.text_input(
-    "Nom ou code du fournisseur"
-)
-
-
-mode_approvisionnement = st.selectbox(
-    "Comment vous approvisionnez-vous principalement ?",
-    [
-        "Sélectionner",
-        "Fournisseur local",
-        "Importation directe",
-        "Grossiste",
-        "Distributeur",
-        "Autre"
-    ]
-)
-
-
-origine = st.selectbox(
-    "Origine principale des produits",
-    [
-        "Sélectionner",
-        "Importé",
-        "Local",
-        "Les deux",
-        "Ne sait pas"
-    ]
-)
-
-
-pays_origine = st.text_input(
-    "Pays d'origine principal des produits"
-)
-
-
 frequence_approvisionnement = st.selectbox(
-    "À quelle fréquence vous approvisionnez-vous ?",
+    "À quelle fréquence votre point de vente "
+    "s'approvisionne-t-il ?",
     [
         "Sélectionner",
         "Plusieurs fois par semaine",
@@ -499,90 +415,42 @@ frequence_approvisionnement = st.selectbox(
 )
 
 
-delai_approvisionnement = st.selectbox(
-    "Quel est généralement le délai d'approvisionnement ?",
+# =========================================================
+# 5. PROBLÈMES D'APPROVISIONNEMENT
+# =========================================================
+
+st.subheader(
+    "5. Problèmes d'approvisionnement"
+)
+
+
+problemes_approvisionnement = st.multiselect(
+    "Quels sont les principaux problèmes "
+    "d'approvisionnement rencontrés ?",
     [
-        "Sélectionner",
-        "Moins de 3 jours",
-        "3 à 7 jours",
-        "1 à 2 semaines",
-        "Plus de 2 semaines",
-        "Ne sait pas"
+        "Ruptures de stock",
+        "Retard de livraison",
+        "Difficulté à trouver certains produits",
+        "Prix élevé",
+        "Problème de transport",
+        "Problème d'importation",
+        "Forte demande",
+        "Autre"
     ]
 )
 
 
-cout_transport = st.number_input(
-    "Coût approximatif du transport par approvisionnement (FCFA)",
-    min_value=0,
-    step=500
-)
-
-
 # =========================================================
-# 5. RUPTURE DE STOCK
+# 6. DEMANDE
 # =========================================================
 
 st.subheader(
-    "5. Rupture de stock"
+    "6. Demande"
 )
 
 
-rupture_stock = st.selectbox(
-    "Avez-vous connu une rupture de stock au cours des 12 derniers mois ?",
-    [
-        "Sélectionner",
-        "Non",
-        "Oui"
-    ]
-)
-
-
-if rupture_stock == "Oui":
-
-    frequence_rupture = st.selectbox(
-        "Fréquence des ruptures de stock",
-        [
-            "Sélectionner",
-            "Rarement",
-            "Occasionnellement",
-            "Fréquemment",
-            "Très fréquemment"
-        ]
-    )
-
-    raison_rupture = st.multiselect(
-        "Quelles sont les principales raisons des ruptures ?",
-        [
-            "Retard de livraison",
-            "Difficulté d'approvisionnement",
-            "Prix élevé du fournisseur",
-            "Problème de transport",
-            "Forte demande",
-            "Problème d'importation",
-            "Manque de trésorerie",
-            "Autre"
-        ]
-    )
-
-else:
-
-    frequence_rupture = ""
-
-    raison_rupture = []
-
-
-# =========================================================
-# 6. DEMANDE ET COMMERCIALISATION
-# =========================================================
-
-st.subheader(
-    "6. Demande et commercialisation"
-)
-
-
-produit_plus_demande = st.multiselect(
-    "Quels produits sont les plus demandés par vos clients ?",
+produits_plus_demandes = st.multiselect(
+    "Quels produits sont les plus demandés ?",
     [
         "Serviettes hygiéniques",
         "Protège-slips",
@@ -594,7 +462,8 @@ produit_plus_demande = st.multiselect(
 
 
 criteres_achat = st.multiselect(
-    "Quels sont les principaux critères de choix des clients ?",
+    "Quels critères déterminent le choix d'un produit "
+    "par les clients ?",
     [
         "Prix",
         "Marque",
@@ -611,7 +480,7 @@ criteres_achat = st.multiselect(
 
 
 evolution_demande = st.selectbox(
-    "Comment évolue la demande de produits de protection menstruelle ?",
+    "Quelle évolution de la demande observez-vous ?",
     [
         "Sélectionner",
         "En forte augmentation",
@@ -625,37 +494,11 @@ evolution_demande = st.selectbox(
 
 
 # =========================================================
-# 7. DIFFICULTÉS COMMERCIALES
+# 7. ENREGISTREMENT
 # =========================================================
 
 st.subheader(
-    "7. Difficultés rencontrées"
-)
-
-
-difficultes = st.multiselect(
-    "Quelles difficultés rencontrez-vous dans la commercialisation ?",
-    [
-        "Prix d'achat élevé",
-        "Transport coûteux",
-        "Difficultés d'approvisionnement",
-        "Ruptures de stock",
-        "Faible demande",
-        "Concurrence entre marques",
-        "Marge insuffisante",
-        "Taxes et droits",
-        "Difficultés liées à l'importation",
-        "Autre"
-    ]
-)
-
-
-# =========================================================
-# 8. ENREGISTREMENT DANS SUPABASE
-# =========================================================
-
-st.subheader(
-    "8. Enregistrement"
+    "7. Enregistrement"
 )
 
 
@@ -665,6 +508,42 @@ if st.button(
 
     donnees = []
 
+
+    # -----------------------------------------------------
+    # VÉRIFICATION DU POINT DE VENTE
+    # -----------------------------------------------------
+
+    if type_commerce == "Sélectionner":
+
+        st.warning(
+            "⚠️ Veuillez sélectionner le type de point de vente."
+        )
+
+        st.stop()
+
+
+    if ville == "Sélectionner":
+
+        st.warning(
+            "⚠️ Veuillez sélectionner la ville."
+        )
+
+        st.stop()
+
+
+    if not produits_plus_demandes:
+
+        st.warning(
+            "⚠️ Veuillez indiquer les produits les plus demandés."
+        )
+
+        st.stop()
+
+
+    # -----------------------------------------------------
+    # CRÉATION DES LIGNES
+    # -----------------------------------------------------
+
     for produit in st.session_state.produits:
 
         if (
@@ -673,11 +552,6 @@ if st.button(
             and produit["marque"].strip() != ""
         ):
 
-            marge = (
-                produit["prix_vente"]
-                - produit["prix_achat"]
-            )
-
             ligne = {
 
                 "code_point_vente":
@@ -685,9 +559,6 @@ if st.button(
 
                 "type_commerce":
                     type_commerce,
-
-                "nom_grande_surface":
-                    nom_grande_surface,
 
                 "ville":
                     ville,
@@ -704,105 +575,84 @@ if st.button(
                 "format":
                     produit["format"],
 
-                "type_conditionnement":
-                    produit["format"],
-
                 "nombre_unites":
                     produit["nombre_unites"],
-
-                "prix_achat_fcfa":
-                    produit["prix_achat"],
 
                 "prix_vente_fcfa":
                     produit["prix_vente"],
 
-                "marge_fcfa":
-                    marge,
-
-                "quantite_achetee_mois":
-                    produit["quantite_achetee"],
-
                 "quantite_vendue_mois":
                     produit["quantite_vendue"],
 
-                "fournisseur":
-                    fournisseur,
-
-                "mode_approvisionnement":
-                    mode_approvisionnement,
-
                 "origine":
-                    origine,
+                    produit["origine"],
 
                 "pays_origine":
-                    pays_origine,
+                    produit["pays_origine"],
 
                 "frequence_approvisionnement":
                     frequence_approvisionnement,
 
-                "delai_approvisionnement":
-                    delai_approvisionnement,
-
-                "cout_transport_fcfa":
-                    cout_transport,
-
-                "rupture_stock":
-                    rupture_stock,
-
-                "frequence_rupture":
-                    frequence_rupture,
-
-                "raison_rupture":
-                    ", ".join(raison_rupture),
+                "problemes_approvisionnement":
+                    ", ".join(
+                        problemes_approvisionnement
+                    ),
 
                 "produits_plus_demandes":
-                    ", ".join(produit_plus_demande),
+                    ", ".join(
+                        produits_plus_demandes
+                    ),
 
                 "criteres_achat":
-                    ", ".join(criteres_achat),
+                    ", ".join(
+                        criteres_achat
+                    ),
 
                 "evolution_demande":
-                    evolution_demande,
-
-                "difficultes_commercialisation":
-                    ", ".join(difficultes)
+                    evolution_demande
             }
+
 
             donnees.append(ligne)
 
 
-    # =====================================================
-    # VÉRIFICATION
-    # =====================================================
+    # -----------------------------------------------------
+    # VÉRIFICATION PRODUIT
+    # -----------------------------------------------------
 
     if not donnees:
 
         st.warning(
-            "⚠️ Veuillez renseigner au moins un produit "
-            "et une marque."
+            "⚠️ Veuillez renseigner au moins "
+            "un produit et une marque."
         )
+
 
     else:
 
         try:
 
-            # Enregistrement DIRECT dans Supabase
+            # ---------------------------------------------
+            # INSERTION DANS SUPABASE
+            # ---------------------------------------------
 
-            supabase.table(
-                "reponses_enquete"
-            ).insert(
-                donnees
-            ).execute()
+            supabase \
+                .table("reponses_enquete") \
+                .insert(donnees) \
+                .execute()
+
 
             st.success(
                 f"✅ Réponse de {code_point_vente} "
                 "enregistrée avec succès dans Supabase."
             )
 
+
             st.info(
                 "Les données sont maintenant enregistrées "
                 "dans la base de données."
             )
+
 
         except Exception as e:
 
@@ -817,7 +667,7 @@ if st.button(
 
 
 # =========================================================
-# 9. NOUVEAU QUESTIONNAIRE
+# 8. NOUVEAU QUESTIONNAIRE
 # =========================================================
 
 st.divider()
@@ -827,18 +677,29 @@ if st.button(
     "🆕 Nouveau questionnaire"
 ):
 
-    st.session_state.code_point_vente = (
+    # Générer le prochain code
+    nouveau_code = (
         obtenir_prochain_code()
     )
 
+
+    st.session_state.code_point_vente = (
+        nouveau_code
+    )
+
+
+    # Réinitialiser les produits
     st.session_state.produits = (
         initialiser_produits()
     )
 
+
+    # Réinitialiser les autres widgets
     cles_a_conserver = [
         "code_point_vente",
         "produits"
     ]
+
 
     for key in list(
         st.session_state.keys()
@@ -848,5 +709,5 @@ if st.button(
 
             del st.session_state[key]
 
+
     st.rerun()
-    
