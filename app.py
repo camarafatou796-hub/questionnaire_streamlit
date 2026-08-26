@@ -377,7 +377,8 @@ frequence_approvisionnement = st.selectbox(
         "Une fois par mois",
         "Moins d'une fois par mois",
         "Selon les besoins"
-    ]
+    ],
+    placeholder="Sélectionner"
 )
 
 
