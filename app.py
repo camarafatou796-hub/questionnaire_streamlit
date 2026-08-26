@@ -402,7 +402,8 @@ problemes_approvisionnement = st.multiselect(
         "Problème d'importation",
         "Forte demande",
         "Autre"
-    ]
+    ],
+    placeholder="Sélectionner"
 )
 
 
@@ -422,7 +423,8 @@ produits_plus_demandes = st.multiselect(
         "Tampons",
         "Coupe menstruelle",
         "Autre"
-    ]
+    ],
+    placeholder="Sélectionner"
 )
 
 criteres_achat = st.multiselect(
@@ -439,7 +441,8 @@ criteres_achat = st.multiselect(
         "Promotion",
         "Notoriété de la marque",
         "Autre"
-    ]
+    ],
+    placeholder="Sélectionner"
 )
 
 evolution_demande = st.selectbox(
