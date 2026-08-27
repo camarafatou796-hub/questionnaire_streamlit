@@ -403,8 +403,6 @@ problemes_approvisionnement = st.multiselect(
     ]
 )
 
-)
-
 
 # =========================================================
 # 6. DEMANDE
