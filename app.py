@@ -610,32 +610,19 @@ if st.button(
 st.divider()
 
 if st.button(
-    "🆕 Nouveau questionnaire"
+    "🆕 Nouveau questionnaire",
+    type="primary",
+    use_container_width=True
 ):
+    # Générer un nouveau code
+    nouveau_code = obtenir_prochain_code()
 
-    nouveau_code = (
-        obtenir_prochain_code()
-    )
+    # Réinitialiser les informations du questionnaire
+    st.session_state.clear()
 
-    st.session_state.code_point_vente = (
-        nouveau_code
-    )
+    # Créer le nouveau questionnaire
+    st.session_state.code_point_vente = nouveau_code
+    st.session_state.produits = initialiser_produits()
 
-    st.session_state.produits = (
-        initialiser_produits()
-    )
-
-    cles_a_conserver = [
-        "code_point_vente",
-        "produits"
-    ]
-
-    for key in list(
-        st.session_state.keys()
-    ):
-
-        if key not in cles_a_conserver:
-
-            del st.session_state[key]
-
+    # Recharger la page
     st.rerun()
