@@ -38,7 +38,6 @@ except Exception:
 def obtenir_prochain_code():
 
     try:
-
         reponse = (
             supabase
             .table("reponses_enquete")
@@ -56,16 +55,12 @@ def obtenir_prochain_code():
                 ligne.get("code_point_vente", "")
             ).strip()
 
-            # On accepte uniquement les codes du type PV0001
             if (
                 len(code) == 6
                 and code.startswith("PV")
                 and code[2:].isdigit()
             ):
-
-                numero = int(code[2:])
-
-                numeros.append(numero)
+                numeros.append(int(code[2:]))
 
         prochain_numero = max(
             numeros,
@@ -75,7 +70,6 @@ def obtenir_prochain_code():
         return f"PV{prochain_numero:04d}"
 
     except Exception:
-
         return "PV0001"
 
 
@@ -100,19 +94,27 @@ def initialiser_produits():
 
 
 # =========================================================
-# INITIALISATION SESSION
+# INITIALISATION DE LA SESSION
 # =========================================================
 
 if "questionnaire_id" not in st.session_state:
     st.session_state.questionnaire_id = 0
 
 if "code_point_vente" not in st.session_state:
-    st.session_state.code_point_vente = obtenir_prochain_code()
+    st.session_state.code_point_vente = (
+        obtenir_prochain_code()
+    )
 
 if "produits" not in st.session_state:
-    st.session_state.produits = initialiser_produits()
+    st.session_state.produits = (
+        initialiser_produits()
+    )
 
 questionnaire_id = st.session_state.questionnaire_id
+
+code_point_vente = (
+    st.session_state.code_point_vente
+)
 
 
 # =========================================================
@@ -147,6 +149,7 @@ st.text_input(
 type_commerce = st.selectbox(
     "Quel est le type de votre point de vente ?",
     [
+        "Sélectionner",
         "Boutique",
         "Pharmacie",
         "Grande surface",
@@ -334,7 +337,8 @@ for i in range(
 # =========================================================
 
 if st.button(
-    "➕ Ajouter un autre produit / une autre marque"
+    "➕ Ajouter un autre produit / une autre marque",
+    key=f"ajouter_produit_{questionnaire_id}"
 ):
 
     st.session_state.produits.append(
@@ -465,7 +469,9 @@ st.subheader(
 )
 
 if st.button(
-    "💾 Enregistrer la réponse"
+    "💾 Enregistrer la réponse",
+    type="secondary",
+    key=f"enregistrer_{questionnaire_id}"
 ):
 
     donnees = []
@@ -590,6 +596,8 @@ if st.button(
                 "dans la base de données."
             )
 
+            st.session_state.questionnaire_enregistre = True
+
         except Exception as e:
 
             st.error(
@@ -611,16 +619,22 @@ st.divider()
 if st.button(
     "🆕 NOUVEAU QUESTIONNAIRE",
     type="primary",
-    use_container_width=True
+    use_container_width=True,
+    key="nouveau_questionnaire"
 ):
+
+    # Passer à un nouvel identifiant de questionnaire
     st.session_state.questionnaire_id += 1
 
+    # Générer un nouveau code point de vente
     st.session_state.code_point_vente = (
         obtenir_prochain_code()
     )
 
+    # Réinitialiser la liste des produits
     st.session_state.produits = (
         initialiser_produits()
     )
 
-    st.rerun()
+    # Recharger l'application
+    st.rerun() 
