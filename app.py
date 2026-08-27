@@ -103,23 +103,16 @@ def initialiser_produits():
 # INITIALISATION SESSION
 # =========================================================
 
+if "questionnaire_id" not in st.session_state:
+    st.session_state.questionnaire_id = 0
+
 if "code_point_vente" not in st.session_state:
-
-    st.session_state.code_point_vente = (
-        obtenir_prochain_code()
-    )
-
+    st.session_state.code_point_vente = obtenir_prochain_code()
 
 if "produits" not in st.session_state:
+    st.session_state.produits = initialiser_produits()
 
-    st.session_state.produits = (
-        initialiser_produits()
-    )
-
-
-code_point_vente = (
-    st.session_state.code_point_vente
-)
+questionnaire_id = st.session_state.questionnaire_id
 
 
 # =========================================================
@@ -154,14 +147,14 @@ st.text_input(
 type_commerce = st.selectbox(
     "Quel est le type de votre point de vente ?",
     [
-        "Sélectionner",
         "Boutique",
         "Pharmacie",
         "Grande surface",
         "Grossiste",
         "Détaillant",
         "Autre"
-    ]
+    ],
+    key=f"type_commerce_{questionnaire_id}"
 )
 
 ville = st.selectbox(
@@ -176,11 +169,13 @@ ville = st.selectbox(
         "Ziguinchor",
         "Touba",
         "Autre"
-    ]
+    ],
+    key=f"ville_{questionnaire_id}"
 )
 
 quartier = st.text_input(
-    "Dans quel quartier se situe votre point de vente ?"
+    "Dans quel quartier se situe votre point de vente ?",
+    key=f"quartier_{questionnaire_id}"
 )
 
 
@@ -205,7 +200,8 @@ produits_commercialises = st.multiselect(
         "Tampons",
         "Coupe menstruelle",
         "Autre"
-    ]
+    ],
+    key=f"produits_commercialises_{questionnaire_id}"
 )
 
 
@@ -245,14 +241,14 @@ for i in range(
                     "Coupe menstruelle",
                     "Autre"
                 ],
-                key=f"produit_{i}"
+                key=f"produit_{questionnaire_id}_{i}"
             )
         )
 
         st.session_state.produits[i]["marque"] = (
             st.text_input(
                 "Marque",
-                key=f"marque_{i}"
+                key=f"marque_{questionnaire_id}_{i}"
             )
         )
 
@@ -267,7 +263,7 @@ for i in range(
                     "Unité",
                     "Autre"
                 ],
-                key=f"format_{i}"
+                key=f"format_{questionnaire_id}_{i}"
             )
         )
 
@@ -276,7 +272,7 @@ for i in range(
                 "Nombre d'unités dans le conditionnement",
                 min_value=0,
                 step=1,
-                key=f"nombre_unites_{i}"
+                key=f"nombre_unites_{questionnaire_id}_{i}"
             )
         )
 
@@ -287,7 +283,7 @@ for i in range(
                 "Prix de vente (FCFA)",
                 min_value=0,
                 step=50,
-                key=f"prix_vente_{i}"
+                key=f"prix_vente_{questionnaire_id}_{i}"
             )
         )
 
@@ -296,7 +292,7 @@ for i in range(
                 "Quantité vendue par mois",
                 min_value=0,
                 step=1,
-                key=f"quantite_vendue_{i}"
+                key=f"quantite_vendue_{questionnaire_id}_{i}"
             )
         )
 
@@ -309,7 +305,7 @@ for i in range(
                     "Local",
                     "Les deux"
                 ],
-                key=f"origine_{i}"
+                key=f"origine_{questionnaire_id}_{i}"
             )
         )
 
@@ -321,7 +317,7 @@ for i in range(
             st.session_state.produits[i]["pays_origine"] = (
                 st.text_input(
                     "Pays d'origine",
-                    key=f"pays_origine_{i}",
+                    key=f"pays_origine_{questionnaire_id}_{i}",
                     placeholder="Exemple : Espagne"
                 )
             )
@@ -376,7 +372,8 @@ frequence_approvisionnement = st.selectbox(
         "Une fois par mois",
         "Moins d'une fois par mois",
         "Selon les besoins"
-    ]
+    ],
+    key=f"frequence_approvisionnement_{questionnaire_id}"
 )
 
 
@@ -400,7 +397,8 @@ problemes_approvisionnement = st.multiselect(
         "Problème d'importation",
         "Forte demande",
         "Autre"
-    ]
+    ],
+    key=f"problemes_approvisionnement_{questionnaire_id}"
 )
 
 
@@ -421,7 +419,8 @@ produits_plus_demandes = st.multiselect(
         "Coupe menstruelle",
         "Autre"
     ],
-    placeholder="Sélectionner"
+    placeholder="Sélectionner",
+    key=f"produits_plus_demandes_{questionnaire_id}"
 )
 
 criteres_achat = st.multiselect(
@@ -438,7 +437,8 @@ criteres_achat = st.multiselect(
         "Promotion",
         "Notoriété de la marque",
         "Autre"
-    ]
+    ],
+    key=f"criteres_achat_{questionnaire_id}"
 )
 
 evolution_demande = st.selectbox(
@@ -451,7 +451,8 @@ evolution_demande = st.selectbox(
         "En diminution",
         "En forte diminution",
         "Ne sait pas"
-    ]
+    ],
+    key=f"evolution_demande_{questionnaire_id}"
 )
 
 
@@ -612,15 +613,14 @@ if st.button(
     type="primary",
     use_container_width=True
 ):
-    # Générer un nouveau code
-    nouveau_code = obtenir_prochain_code()
+    st.session_state.questionnaire_id += 1
 
-    # Réinitialiser les informations du questionnaire
-    st.session_state.clear()
+    st.session_state.code_point_vente = (
+        obtenir_prochain_code()
+    )
 
-    # Créer le nouveau questionnaire
-    st.session_state.code_point_vente = nouveau_code
-    st.session_state.produits = initialiser_produits()
+    st.session_state.produits = (
+        initialiser_produits()
+    )
 
-    # Recharger la page
     st.rerun()
