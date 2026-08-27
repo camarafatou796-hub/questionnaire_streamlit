@@ -205,8 +205,7 @@ produits_commercialises = st.multiselect(
         "Tampons",
         "Coupe menstruelle",
         "Autre"
-    ],
-    placeholder="Sélectionner"
+    ]
 )
 
 
@@ -377,8 +376,7 @@ frequence_approvisionnement = st.selectbox(
         "Une fois par mois",
         "Moins d'une fois par mois",
         "Selon les besoins"
-    ],
-    placeholder="Sélectionner"
+    ]
 )
 
 
@@ -402,8 +400,7 @@ problemes_approvisionnement = st.multiselect(
         "Problème d'importation",
         "Forte demande",
         "Autre"
-    ],
-    placeholder="Sélectionner"
+    ]
 )
 
 
@@ -441,8 +438,7 @@ criteres_achat = st.multiselect(
         "Promotion",
         "Notoriété de la marque",
         "Autre"
-    ],
-    placeholder="Sélectionner"
+    ]
 )
 
 evolution_demande = st.selectbox(
