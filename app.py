@@ -610,7 +610,7 @@ if st.button(
 st.divider()
 
 if st.button(
-    "🆕 Nouveau questionnaire",
+    "🆕 NOUVEAU QUESTIONNAIRE",
     type="primary",
     use_container_width=True
 ):
